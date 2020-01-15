@@ -162,6 +162,10 @@ endfunc
 func! CMakeRun(...)
 	let target = ""
 	if a:0 == 0
+		if !len(g:cmake_targets) 
+			echo "no target to run"
+			return
+		endif
 		let target = g:cmake_targets[0]
 	else 
 		let target = trim(a:1)
@@ -172,12 +176,19 @@ func! CMakeRun(...)
 		return
 	endif
 	let exec_dir = g:cmake_build_dir . "/" . g:cmake_target_dirs[target]
-	if executable( exec_dir . "/" . target)
-		call system("cd " . exec_dir . "&& ./" . target)
+	echo "running " . exec_dir ."/".  target
+	if !executable( exec_dir . "/" . target)
+		call CMakeBuild(target)
+	endif
+	if executable(exec_dir . "/" . target)
+		exec "!cd " . exec_dir . "&& ./" . target
 	endif
 endfunc
 
 func! CMakeSave()
+	if !g:cmake_enable 
+		return
+	endif
 	let config = {}
 	let config["targets"] = g:cmake_targets
 	let config["target_dirs"] = g:cmake_target_dirs
