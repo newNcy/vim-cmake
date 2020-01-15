@@ -1,8 +1,8 @@
 
 
 let g:cmake_build_mode		= "debug"
-let g:cmake_build_debug		= "build-test"
-let g:cmake_build_release	= ""
+let g:cmake_build_debug		= "build-debug"
+let g:cmake_build_release	= "build-release"
 let g:cmake_build_dir		= ""
 
 let g:cmake_targets			= []
