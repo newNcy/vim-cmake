@@ -176,9 +176,13 @@ func! CMakeRun(...)
 		return
 	endif
 	let exec_dir = g:cmake_build_dir . "/" . g:cmake_target_dirs[target]
-	echo "running " . exec_dir ."/".  target
+	let full_path = exec_dir ."/". target
+	echo "running " . full_path
+	if executable(full_path) 
+		call system("rm " . full_path)
+	endif
 	call CMakeBuild(target)
-	if executable(exec_dir . "/" . target)
+	if executable(full_path)
 		exec "!cd " . exec_dir . "&& ./" . target
 	endif
 endfunc
