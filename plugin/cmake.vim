@@ -144,6 +144,7 @@ func! CMakeMRU(target)
 endfunc
 
 func! CMakeBuild(...)
+	call mkdir(g:cmake_build_dir, "p")
 	if empty(g:cmake_targets) 
 		echo "no target to build!"
 		return
