@@ -177,9 +177,7 @@ func! CMakeRun(...)
 	endif
 	let exec_dir = g:cmake_build_dir . "/" . g:cmake_target_dirs[target]
 	echo "running " . exec_dir ."/".  target
-	if !executable( exec_dir . "/" . target)
-		call CMakeBuild(target)
-	endif
+	call CMakeBuild(target)
 	if executable(exec_dir . "/" . target)
 		exec "!cd " . exec_dir . "&& ./" . target
 	endif
