@@ -1,10 +1,10 @@
 
 
+let g:cmake_build_mode		= "debug"
 let g:cmake_build_debug		= "build-test"
 let g:cmake_build_release	= ""
 let g:cmake_build_dir		= ""
 
-let g:cmake_build_mode		= "debug"
 let g:cmake_targets			= []
 let g:cmake_target_dirs		= {}
 let g:cmake_enable			= 0
@@ -46,10 +46,11 @@ func! CMakeLoadSymbols()
 
 	let cmd = "cmake -S . -B " . g:cmake_build_dir 
 	if strlen(g:cmake_generator) 
-		let cmd = cmd . " -G " . g:cmake_generator
+		let cmd = cmd . " -G \"" . g:cmake_generator . "\""
 	endif
 	echo "loadding symbols ... "
-	call system(cmd)
+	let ret = system(cmd)
+	"exec "!" . cmd 
 
 	"读取项目信息
 	let reply_dir = api_dir . "/reply"
@@ -85,7 +86,28 @@ func! CMakeLoadSymbols()
 	endfor
 endfunc
 
+func! CMakeLoadConfig()
+	let conf_file = "cmake.json"
+	if filereadable(conf_file)
+		let conf = LoadJson(conf_file)
+		if has_key(conf, "generator")
+			let g:cmake_generator = conf["generator"]
+		endif
+		if has_key(conf, "mode")
+			let g:cmake_build_mode = conf["mode"]
+		endif
+		if has_key(conf, "debug")
+			let g:cmake_build_debug = conf["debug"]
+		endif
+		if has_key(conf, "release")
+			let g:cmake_build_release = conf["release"]
+		endif
+	else 
+	endif
+endfunc
+
 func! CMakeInit()
+	call CMakeLoadConfig()
 	if filereadable("CMakeLists.txt")
 		let g:cmake_enable = 1
 		"构建模式
@@ -142,8 +164,12 @@ func! CMakeRun(...)
 	if a:0 == 0
 		let target = g:cmake_targets[0]
 	else 
-		let target = a:1
+		let target = trim(a:1)
 		call CMakeMRU(target)
+	endif
+	if !has_key(g:cmake_target_dirs, target)
+		echo "not config for '" .target. "', try CMakeReload..." 
+		return
 	endif
 	let exec_dir = g:cmake_build_dir . "/" . g:cmake_target_dirs[target]
 	if executable( exec_dir . "/" . target)
@@ -199,16 +225,6 @@ func! ShowCenter(lines)
 endfunc
 
 func! CMakeStartup()
-	let conf_file  = "cmake.json"
-	if filereadable(conf_file)
-		let conf = LoadJson(conf_file)
-		if count(conf, "generator")
-			let g:cmake_generator = conf["generator"]
-		endif
-		if count(conf, "mode")
-			let g:cmake_build_mode = conf["mode"]
-		endif
-	endif
 	if argc() == 0
 		let ui = []
 		call add(ui, "  ____   __  __      _      _  _   _____     ")
@@ -225,15 +241,14 @@ func! CMakeStartup()
 		call add(ui, " [0] xxx                        ")  
 		"call ShowCenter(ui)
 	endif
-	call CMakeInit()
 endfunc
 
 "au BufNewFile,BufRead * call CMakeInit()
-au VimEnter * call CMakeStartup()
+au VimEnter * call CMakeInit()
 au VimLeave * call CMakeSave()
 nmap <cr> :call CMakeRun()<cr>
 
 
-command -nargs=0 CMakeInit call CMakeInit()
+command -nargs=0 CMakeReload call CMakeLoadSymbols()
 command -complete=customlist,CMakeTargetList -nargs=? CMakeBuild call CMakeBuild(<f-args>)
 command -complete=customlist,CMakeTargetList -nargs=? CMakeRun call CMakeRun(<f-args>)
