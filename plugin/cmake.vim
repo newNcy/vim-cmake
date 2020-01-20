@@ -32,6 +32,8 @@ endfunc
 
 
 func! CMakeLoadSymbols()
+	let g:cmake_targets = []
+	let g:cmake_target_dirs = {}
 	let api_dir = g:cmake_build_dir . "/.cmake/api/v1"
 	let query_file_dir	= api_dir . "/query/client-ncy" 
 	let query_file_path = query_file_dir . "/query.json"
